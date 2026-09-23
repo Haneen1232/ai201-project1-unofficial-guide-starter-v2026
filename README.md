@@ -1,8 +1,8 @@
 # The Unofficial Guide
 
-<!-- Replace this line with your name and which corpus you picked. -->
+Haneen, corpus: campus_life
 
-> **This file is your submission.** Fill it in as you go — most sections get
+> **This file is your submission.** Fill it in as you go, most sections get
 > written during the milestone that produces them, not at the end.
 >
 > How the starter works, and every command you'll need, is in `RUNNING.md`.
@@ -10,10 +10,6 @@
 >
 > **Paste everything as text.** No screenshots, no video. A typed table gets
 > full credit; a picture of the same table gets none.
->
-> Delete these instruction blocks as you replace them. The `<!-- -->` comments
-> are notes to you and don't show up when the page renders — you can leave them
-> or remove them.
 
 ---
 
@@ -21,119 +17,101 @@
 
 ## What This Does
 
-<!-- Three or four sentences. Which corpus you picked, and the kinds of
-     questions your system answers. Write it for someone who has never seen
-     this repo.
-
-     Milestone 5. -->
+This system answers questions about student life using the campus_life corpus, 88 short posts covering housing, dining, courses, and campus administration. Someone can ask a plain question like "is the housing lottery actually random?" or "what is the workload like for CS 210?" and get back a grounded answer that names the exact document it came from. If a question falls outside what the corpus covers, the system says so instead of guessing.
 
 ## Chunking Strategy
 
-**Chunk size:**
-**Overlap:**
+**Chunk size:** Variable, paragraph based (average 191 characters, range 71 to 397)
+**Overlap:** None (paragraph splitting doesn't use a fixed overlap)
 
-<!-- What about YOUR documents made you pick these numbers? Short posts and
-     long sectioned guides don't want the same chunking, and "800 seemed
-     reasonable" earns nothing. Point at something you noticed when you read
-     the documents in Milestone 1.
-
-     If you changed your mind partway through, say so and say why. That's worth
-     more than pretending you got it right first time.
-
-     Milestone 3. -->
+The campus_life documents are short posts averaging 317 characters, mostly under 800. The starter's fixed size fallback chunker barely touched them: it produced 88 chunks from 88 documents, meaning every document became exactly one chunk regardless of whether it held one idea or several. Reading the documents in Milestone 1, I noticed several posts cover more than one topic in separate paragraphs, for example a noise post that also mentions library hours as an alternative. I replaced the chunker with one that splits on paragraph breaks and merges any resulting piece under 150 characters into its neighbor, so a fragment never stands alone as its own chunk. This produced 145 chunks instead of 88, averaging 191 characters, with the shortest at 71 and longest at 397. I chose paragraph splitting over a fixed character count because it respects where the writer already separated their thoughts, rather than cutting at an arbitrary character count that might land mid sentence.
 
 ## Sample Chunks
 
-<!-- Five chunks, pasted as text. Label each one and name the file it came from
-     AND the function that produced it — the grader checks your code against
-     what you claim here.
-
-     `python app.py chunks -n 5` prints all three for you. Copy them straight
-     across.
-
-     Milestone 3. -->
-
-**Chunk 1** — source: `` — produced by: ``
+**Chunk 1** - source: `admin_add_drop_deadline.txt#0` - produced by: `chunker.py::split_documents`
 
 ```
+On the add/drop deadline
+
+You can add a course through the end of the second week. Dropping is a longer window, through the end of week six, but a drop after week two shows as a W on your transcript. Nothing anywhere on the registrar's site says this plainly, and students find out from each other.
 ```
 
-**Chunk 2** — source: `` — produced by: ``
+**Chunk 2** - source: `course_cs_340.txt#1` - produced by: `chunker.py::split_documents`
 
 ```
+Expect 6 hours a week early, 15 in the last three weeks when the project lands.
+
+The one piece of advice: start the term project in week three, not week eight; everyone learns this the hard way.
 ```
 
-**Chunk 3** — source: `` — produced by: ``
+**Chunk 3** - source: `course_stat_150_exams.txt#0` - produced by: `chunker.py::split_documents`
 
 ```
+STAT 150 Applied Statistics, assessment
+
+Three equally weighted midterms, no final. No curve, but the lowest midterm is dropped.
+
+The dropped midterm makes the first one low stakes; use it to learn the format.
 ```
 
-**Chunk 4** — source: `` — produced by: ``
+**Chunk 4** - source: `dining_verrill_street_grill_followup.txt#1` - produced by: `chunker.py::split_documents`
 
 ```
+Also worth saying: one register, so the queue is a single line no matter how busy. Nobody tells you this at orientation.
 ```
 
-**Chunk 5** — source: `` — produced by: ``
+**Chunk 5** - source: `housing_morrow_house_noise.txt#0` - produced by: `chunker.py::split_documents`
 
 ```
+Noise levels in Morrow House
+
+Asked about this a lot so writing it down. Loud until about 1am on weekends, no enforced quiet hours.
+
+If you're someone who needs quiet to work, the library is open until 2am during term and that's what most people in this building end up doing.
 ```
 
 ## Sample Answer
 
-<!-- One complete question and answer, pasted as text, with the source line
-     visible. Milestone 4. -->
-
-**Question:**
+**Question:** Is the housing lottery actually random?
 
 **Answer:**
 
 ```
+The housing lottery is not entirely random in the way most people assume. While rising sophomores get a number drawn at random, juniors and seniors are ordered by accumulated credit hours first, and ties are broken randomly.
+
+Source: admin_housing_lottery.txt
 ```
 
-**My relevance cutoff:**
-
-<!-- The number you set in config.py, and how you got there.
-
-     You ran five questions your corpus covers and the five in OUT_OF_SCOPE
-     that it clearly doesn't, and wrote down the best distance for each. What
-     did those two groups look like? Where was the gap? Put the actual numbers
-     here — the table below wants all ten rows.
-
-     Milestone 4. -->
+**My relevance cutoff:** 0.6 (the starter's default, kept after measuring my own distances below, since the gap between in corpus and out of corpus questions was wide enough that 0.6 sits cleanly in the middle)
 
 | Question | In corpus? | Best distance |
 |---|---|---|
-|  |  |  |
+| Is the housing lottery actually random? | Yes | 0.248 |
+| What do students say about wait times at Kestrel Commons? | Yes | 0.262 |
+| What is the workload like for CS 210? | Yes | 0.276 |
+| When do I need to declare a major? | Yes | 0.289 |
+| What is the noise like in Aldridge Hall? | Yes | 0.402 |
+| What is the capital of Mongolia? | No | 0.825 |
+| How do I change the oil in a diesel engine? | No | 0.934 |
+| Who won the 1994 World Cup? | No | 0.874 |
+| What is the recommended dosage of ibuprofen for a headache? | No | 0.803 |
+| How do I write a for loop in Rust? | No | 0.877 |
 
 ## How I Used AI
 
-<!-- Two specific moments. For each: what you asked for, what came back, and
-     what you changed about it.
+**1.** I got a chroma-hnswlib build error during pip install -r requirements.txt that said Microsoft Visual C++ 14.0 was required. I asked Claude what to do, and it walked me through installing Visual Studio Build Tools with the "Desktop development with C++" workload specifically, rather than the whole Visual Studio IDE, which fixed the install.
 
-     "I asked Claude to write the chunking function from my notes. It ignored
-     the overlap, so I added that myself" is the level of detail we're after.
-     "I used AI to help me code" is not.
-
-     Milestone 5. -->
-
-**1.**
-
-**2.**
-
-<!-- ── Stretch features ─────────────────────────────────────────────────────
-     Doing one? Say so here BEFORE you start. A feature this README never
-     claims earns nothing.
-     ───────────────────────────────────────────────────────────────────────── -->
+**2.** I asked Claude to help me write a chunking strategy for Milestone 3. It suggested paragraph based splitting with a minimum size merge rule after I described that campus_life's default chunker wasn't splitting anything (88 documents, 88 chunks). I ran it, saw the new chunk count (145) and average size, and confirmed the sample chunks still read as complete thoughts before committing it.
 
 ---
 
 # Unit 2
 
 <!-- These sections get ADDED to what's already above. Don't delete or rewrite
-     unit 1 — the point is that someone can see what you said before you knew
+     unit 1, the point is that someone can see what you said before you knew
      how it went. -->
 
-## Run Log — Before
+## Run Log - Before
 
 <!-- Your five criteria, three runs each. `python run_eval.py --label before`
      runs the questions, puts the OUT_OF_SCOPE ones through the gate, and
@@ -154,13 +132,13 @@
 | 5. | | | | | |
 
 <!-- Underneath, paste the REAL output for each criterion from one of your
-     runs — the actual text your system produced, not a description of it.
+     runs, the actual text your system produced, not a description of it.
      Name the file and function that produced it. -->
 
 ## Verdicts
 
 <!-- MET or MISSED for each of the five, against the target you wrote last
-     unit — not a new one. Plus a sentence on how you decided. That sentence
+     unit, not a new one. Plus a sentence on how you decided. That sentence
      matters most where it was close.
 
      If your target said 4 of 5 and your runs came out 4, 3, 4, that's a MISS.
@@ -179,14 +157,14 @@
 ## Diagnoses
 
 <!-- For each miss: which stage caused it, and how. The stage alone isn't
-     enough — you need the mechanism.
+     enough, you need the mechanism.
 
      Not a diagnosis: "Question 3 didn't work."
      A diagnosis:     "Question 3 asks about laundry costs. The answer is in
                        one sentence that got split across two chunks, so
                        neither chunk on its own contains it."
 
-     The five stages: loading → chunking → embedding → retrieval → generation.
+     The five stages: loading, chunking, embedding, retrieval, generation.
 
      Look for a pattern. If three misses all ask about numbers, that's one
      problem, not three.
@@ -205,7 +183,7 @@
 <!-- Connect it to a specific diagnosis above in one sentence. If you can't,
      you picked a fix because it sounded impressive. -->
 
-### Run Log — After
+### Run Log - After
 
 <!-- Same format, same five criteria, three runs each.
      `python run_eval.py --label after` -->
@@ -221,7 +199,7 @@
 **Did it help?**
 
 <!-- Say plainly whether it did, and how you know. If it made things worse,
-     say that — a change that backfired, honestly reported, earns full credit
+     say that, a change that backfired, honestly reported, earns full credit
      and is more interesting than one that worked. What matters is that you can
      tell.
 
@@ -239,7 +217,7 @@
 
 ## What I'd Do Differently
 
-<!-- Knowing what you know now — which of your five criteria would you write
+<!-- Knowing what you know now, which of your five criteria would you write
      differently, and why?
 
      Milestone 5. -->
